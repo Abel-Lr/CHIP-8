@@ -55,4 +55,4 @@ dkms.conf
 *.dwo
 
 # target
-./chip8
+/chip8
