@@ -5,6 +5,8 @@
 #include "platform.h"
 #include "chip8.h"
 
+#define CYCLES_PER_FRAME 11
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -24,7 +26,7 @@ int main(int argc, char **argv)
 
     SDL_Event event;
     Platform platform = {0};
-    if (platform_init(&platform, "App", 640, 320) < 0)
+    if (platform_init(&platform, "CHIP-8", 640, 320) < 0)
     {
         platform_destroy(&platform);
         return EXIT_FAILURE;
@@ -43,7 +45,11 @@ int main(int argc, char **argv)
                 break;
             }
         }
-        platform_render(&platform);
+        for (int i = 0; i < CYCLES_PER_FRAME; i++)
+        {
+            chip8_cycle(&chip8);
+        }
+        platform_render(&platform, &chip8);
         SDL_Delay(16); // 60fps
     }
     platform_destroy(&platform);

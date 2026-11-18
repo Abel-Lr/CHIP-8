@@ -37,3 +37,77 @@ int chip8_load_rom(Chip8 *chip8, const char *rom_path)
     fclose(rom);
     return 0;
 }
+
+uint16_t chip8_fetch(Chip8 *chip8)
+{
+    uint8_t high_byte = chip8->memory[chip8->PC];
+    uint8_t low_byte = chip8->memory[chip8->PC + 1];
+
+    uint16_t opcode = (high_byte << 8) | low_byte;
+    chip8->PC += 2;
+
+    return opcode;
+}
+
+void chip8_cycle(Chip8 *chip8)
+{
+    uint16_t opcode = chip8_fetch(chip8);
+
+    uint8_t type = (opcode & 0xF000) >> 12;
+    uint8_t X = (opcode & 0x0F00) >> 8;
+    uint8_t Y = (opcode & 0x00F0) >> 4;
+    uint8_t N = opcode & 0x000F;
+    uint8_t NN = opcode & 0x00FF;
+    uint16_t NNN = opcode & 0x0FFF;
+
+    switch (type)
+    {
+    case 0x00:
+        if (opcode == 0x00E0)
+            memset(chip8->screen, 0, sizeof(chip8->screen));
+        else
+            fprintf(stderr, "Unrecognized opcode : 0x%04x\n", opcode);
+        break;
+    case 0x01:
+        chip8->PC = NNN;
+        break;
+    case 0x06:
+        chip8->V[X] = NN;
+        break;
+    case 0x07:
+        chip8->V[X] += NN;
+        break;
+    case 0x0A:
+        chip8->I = NNN;
+        break;
+    case 0x0D:
+    {
+        uint8_t x = chip8->V[X] % CHIP8_SCREEN_WIDTH;
+        uint8_t y = chip8->V[Y] % CHIP8_SCREEN_HEIGHT;
+        chip8->V[0x0F] = 0;
+        for (int row = 0; row < N; row++)
+        {
+            if (y + row >= CHIP8_SCREEN_HEIGHT)
+                break;
+            uint8_t sprite_byte = chip8->memory[chip8->I + row];
+            for (int col = 0; col < CHIP8_SPRITE_WIDTH; col++)
+            {
+                if (x + col >= CHIP8_SCREEN_WIDTH)
+                    break;
+                bool sprite_pixel = (sprite_byte >> (CHIP8_SPRITE_WIDTH - 1 - col)) & 0x01;
+                if (sprite_pixel)
+                {
+                    bool *pixel = &chip8->screen[y + row][x + col];
+                    if (*pixel)
+                        chip8->V[0x0F] = 1;
+                    *pixel = !*pixel;
+                }
+            }
+        }
+    }
+    break;
+    default:
+        fprintf(stderr, "Unrecognized opcode : 0x%04x\n", opcode);
+        break;
+    }
+}

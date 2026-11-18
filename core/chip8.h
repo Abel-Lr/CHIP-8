@@ -11,6 +11,7 @@
 #define CHIP8_NB_KEYPAD 16
 #define CHIP8_PROGRAM_START 0x200
 #define CHIP8_MAX_ROM_SIZE (CHIP8_MEMORY_SIZE - CHIP8_PROGRAM_START)
+#define CHIP8_SPRITE_WIDTH 8
 
 typedef struct
 {
@@ -28,5 +29,7 @@ typedef struct
 
 void chip8_init(Chip8 *chip8);
 int chip8_load_rom(Chip8 *chip8, const char *rom_path);
+uint16_t chip8_fetch(Chip8 *chip8);
+void chip8_cycle(Chip8 *chip8);
 
 #endif

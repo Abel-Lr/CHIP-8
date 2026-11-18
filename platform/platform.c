@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include "platform.h"
+#include "chip8.h"
 
 int platform_init(Platform *platform, const char *title, int w, int h)
 {
@@ -45,19 +46,21 @@ void platform_destroy(Platform *platform)
     SDL_Quit();
 }
 
-static void draw_centered_rect(Platform *platform, int rect_w, int rect_h)
-{
-    int screen_w, screen_h;
-    SDL_GetWindowSize(platform->window, &screen_w, &screen_h);
-    SDL_Rect rect = {.x = screen_w / 2 - rect_w / 2, .y = screen_h / 2 - rect_h / 2, .w = rect_w, .h = rect_h};
-    SDL_RenderFillRect(platform->renderer, &rect);
-}
-
-void platform_render(Platform *platform)
+void platform_render(Platform *platform, const Chip8 *chip8)
 {
     SDL_SetRenderDrawColor(platform->renderer, 0x0, 0x0, 0x0, 0xff);
     SDL_RenderClear(platform->renderer);
     SDL_SetRenderDrawColor(platform->renderer, 0xff, 0xff, 0xff, 0xff);
-    draw_centered_rect(platform, 10, 10);
+    for (int y = 0; y < CHIP8_SCREEN_HEIGHT; y++)
+    {
+        for (int x = 0; x < CHIP8_SCREEN_WIDTH; x++)
+        {
+            if (chip8->screen[y][x])
+            {
+                SDL_Rect pixel = {.h = PLATFORM_PIXEL_SCALE, .w = PLATFORM_PIXEL_SCALE, .x = x * PLATFORM_PIXEL_SCALE, .y = y * PLATFORM_PIXEL_SCALE};
+                SDL_RenderFillRect(platform->renderer, &pixel);
+            }
+        }
+    }
     SDL_RenderPresent(platform->renderer);
 }
