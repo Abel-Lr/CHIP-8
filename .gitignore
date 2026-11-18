@@ -56,3 +56,9 @@ dkms.conf
 
 # target
 /chip8
+
+# target tests
+*.ch8
+
+# roms
+roms/

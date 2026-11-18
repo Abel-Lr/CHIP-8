@@ -26,7 +26,7 @@ typedef struct
     bool keyboard[CHIP8_NB_KEYPAD];
 } Chip8;
 
-void chip8_init(Chip8* chip8);
-int chip8_load_rom(Chip8* chip8, const char* rom_path);
+void chip8_init(Chip8 *chip8);
+int chip8_load_rom(Chip8 *chip8, const char *rom_path);
 
 #endif
