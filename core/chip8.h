@@ -15,16 +15,16 @@
 
 typedef struct
 {
-    uint8_t memory[CHIP8_MEMORY_SIZE];
-    uint8_t V[CHIP8_NB_REG];
-    uint16_t I;
-    uint16_t PC;
-    uint16_t stack[CHIP8_STACK_SIZE];
-    uint8_t SP;
+    uint8_t memory[CHIP8_MEMORY_SIZE];                    // 4 KB RAM, programs start at 0x200
+    uint8_t V[CHIP8_NB_REG];                              // 16 8-bit registers, VF is used as flag
+    uint16_t I;                                           // address register
+    uint16_t PC;                                          // address of the next instruction
+    uint16_t stack[CHIP8_STACK_SIZE];                     // return addresses for subroutines
+    uint8_t SP;                                           // index of the next free stack slot
     uint8_t delay_timer;
     uint8_t sound_timer;
-    bool screen[CHIP8_SCREEN_HEIGHT][CHIP8_SCREEN_WIDTH];
-    bool keyboard[CHIP8_NB_KEYPAD];
+    bool screen[CHIP8_SCREEN_HEIGHT][CHIP8_SCREEN_WIDTH]; // screen indexed as screen[y][x]
+    bool keyboard[CHIP8_NB_KEYPAD];                       // 16 keys, true if pressed
 } Chip8;
 
 void chip8_init(Chip8 *chip8);
