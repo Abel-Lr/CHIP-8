@@ -26,7 +26,11 @@ int main(int argc, char **argv)
 
     SDL_Event event;
     Platform platform = {0};
-    if (platform_init(&platform, "CHIP-8", 640, 320) < 0)
+    if (platform_init(
+            &platform,
+            "CHIP-8",
+            CHIP8_SCREEN_WIDTH * PLATFORM_PIXEL_SCALE,
+            CHIP8_SCREEN_HEIGHT * PLATFORM_PIXEL_SCALE) < 0)
     {
         platform_destroy(&platform);
         return EXIT_FAILURE;
