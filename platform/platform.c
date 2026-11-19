@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include "platform.h"
 #include "chip8.h"
+#include <string.h>
 
 typedef struct
 {
@@ -18,6 +19,34 @@ static const Theme themes[] = {
 };
 
 static const int nb_themes = sizeof(themes) / sizeof(themes[0]);
+
+static const SDL_Scancode keymap[CHIP8_NB_KEYPAD] = {
+    [0x0] = SDL_SCANCODE_X,
+    [0x1] = SDL_SCANCODE_1,
+    [0x2] = SDL_SCANCODE_2,
+    [0x3] = SDL_SCANCODE_3,
+    [0x4] = SDL_SCANCODE_Q,
+    [0x5] = SDL_SCANCODE_W,
+    [0x6] = SDL_SCANCODE_E,
+    [0x7] = SDL_SCANCODE_A,
+    [0x8] = SDL_SCANCODE_S,
+    [0x9] = SDL_SCANCODE_D,
+    [0xA] = SDL_SCANCODE_Z,
+    [0xB] = SDL_SCANCODE_C,
+    [0xC] = SDL_SCANCODE_4,
+    [0xD] = SDL_SCANCODE_R,
+    [0xE] = SDL_SCANCODE_F,
+    [0xF] = SDL_SCANCODE_V,
+};
+
+static int get_chip8_key(SDL_Scancode code)
+{
+    for (int i = 0; i < CHIP8_NB_KEYPAD; i++)
+        if (keymap[i] == code)
+            return i;
+
+    return -1;
+}
 
 static void update_window_title(Platform *platform)
 {
@@ -131,6 +160,12 @@ static void show_quit_progress(Uint32 elapsed_time_held)
     fflush(stdout);
 }
 
+static void clear_quit_progress(void)
+{
+    printf("\r\033[K");
+    fflush(stdout);
+}
+
 bool platform_process_events(Platform *platform, Chip8 *chip8)
 {
     SDL_Event event;
@@ -141,6 +176,14 @@ bool platform_process_events(Platform *platform, Chip8 *chip8)
         case SDL_QUIT:
             SDL_Log("Quitting...");
             return false;
+        case SDL_WINDOWEVENT:
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+            {
+                platform->escape_held = false;
+                clear_quit_progress();
+                memset(chip8->keyboard, 0, sizeof(chip8->keyboard));
+            }
+            break;
         case SDL_KEYDOWN:
             if (event.key.repeat != 0)
                 break;
@@ -158,15 +201,25 @@ bool platform_process_events(Platform *platform, Chip8 *chip8)
                     platform->escape_press_time = SDL_GetTicks();
                     break;
                 default:
+                {
+                    const int key = get_chip8_key(event.key.keysym.scancode);
+                    if (key >= 0)
+                        chip8->keyboard[key] = true;
                     break;
+                }
                 }
             break;
         case SDL_KEYUP:
             if (event.key.keysym.sym == SDLK_ESCAPE)
             {
                 platform->escape_held = false;
-                printf("\r\033[K");
-                fflush(stdout);
+                clear_quit_progress();
+            }
+            else
+            {
+                const int key_released = get_chip8_key(event.key.keysym.scancode);
+                if (key_released >= 0)
+                    chip8->keyboard[key_released] = false;
             }
             break;
         default:

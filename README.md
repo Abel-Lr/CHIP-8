@@ -52,5 +52,5 @@ The emulator is developed against the [CHIP-8 test suite](https://github.com/Tim
 - [x] 3. Corax+ opcode test
 - [x] 4. Flags
 - [ ] 5. Quirks
-- [ ] 6. Keypad
+- [~] 6. Keypad
 - [ ] 7. Beep
