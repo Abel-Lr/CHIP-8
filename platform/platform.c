@@ -48,9 +48,9 @@ void platform_destroy(Platform *platform)
 
 void platform_render(Platform *platform, const Chip8 *chip8)
 {
-    SDL_SetRenderDrawColor(platform->renderer, 0x0, 0x0, 0x0, 0xff);
+    SDL_SetRenderDrawColor(platform->renderer, 0x14, 0x14, 0x14, 0xff);
     SDL_RenderClear(platform->renderer);
-    SDL_SetRenderDrawColor(platform->renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_SetRenderDrawColor(platform->renderer, 0x32, 0xff, 0x66, 0xff);
     for (int y = 0; y < CHIP8_SCREEN_HEIGHT; y++)
     {
         for (int x = 0; x < CHIP8_SCREEN_WIDTH; x++)
