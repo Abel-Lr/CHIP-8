@@ -50,7 +50,7 @@ The emulator is developed against the [CHIP-8 test suite](https://github.com/Tim
 - [x] 1. CHIP-8 logo
 - [x] 2. IBM logo
 - [x] 3. Corax+ opcode test
-- [ ] 4. Flags
+- [x] 4. Flags
 - [ ] 5. Quirks
 - [ ] 6. Keypad
 - [ ] 7. Beep
