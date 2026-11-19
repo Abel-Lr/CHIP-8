@@ -40,11 +40,11 @@ int chip8_load_rom(Chip8 *chip8, const char *rom_path)
 
 uint16_t chip8_fetch(Chip8 *chip8)
 {
-    uint8_t high_byte = chip8->memory[chip8->PC];
-    uint8_t low_byte = chip8->memory[chip8->PC + 1];
+    uint8_t high_byte = chip8->memory[chip8->PC & CHIP8_ADDR_MASK];
+    uint8_t low_byte = chip8->memory[(chip8->PC + 1) & CHIP8_ADDR_MASK];
 
     uint16_t opcode = (high_byte << 8) | low_byte;
-    chip8->PC += 2;
+    chip8->PC = (chip8->PC + 2) & CHIP8_ADDR_MASK;
 
     return opcode;
 }
@@ -58,29 +58,104 @@ void chip8_cycle(Chip8 *chip8)
     uint8_t Y = (opcode & 0x00F0) >> 4;
     uint8_t N = opcode & 0x000F;
     uint8_t NN = opcode & 0x00FF;
-    uint16_t NNN = opcode & 0x0FFF;
+    uint16_t NNN = opcode & CHIP8_ADDR_MASK;
 
     switch (type)
     {
-    case 0x00:
-        if (opcode == 0x00E0)
+    case 0x0:
+        if (opcode == 0x00E0) // Clear the screen
+        {
             memset(chip8->screen, 0, sizeof(chip8->screen));
+        }
+        else if (opcode == 0x00EE) // Return from subroutine
+        {
+            if (chip8->SP == 0)
+            {
+                fprintf(stderr, "Stack underflow at 0x%04x (opcode=0x%04x)\n", chip8->PC - 2, opcode);
+                break;
+            }
+            chip8->SP--;
+            chip8->PC = chip8->stack[chip8->SP];
+        }
         else
-            fprintf(stderr, "Unrecognized opcode : 0x%04x\n", opcode);
+        {
+            fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
+        }
         break;
-    case 0x01:
+    case 0x1: // goto
         chip8->PC = NNN;
         break;
-    case 0x06:
+    case 0x2: // subroutine
+        if (chip8->SP >= CHIP8_STACK_SIZE)
+        {
+            fprintf(stderr, "Stack overflow at 0x%04x (opcode=0x%04x)\n", chip8->PC - 2, opcode);
+            break;
+        }
+        chip8->stack[chip8->SP] = chip8->PC;
+        chip8->SP++;
+        chip8->PC = NNN;
+        break;
+    case 0x3: // Skip next opcode
+        if (chip8->V[X] == NN)
+            chip8->PC += 2;
+        break;
+    case 0x4: // Skip next opcode
+        if (chip8->V[X] != NN)
+            chip8->PC += 2;
+        break;
+    case 0x5: // Skip next opcode
+        if (chip8->V[X] == chip8->V[Y])
+            chip8->PC += 2;
+        break;
+    case 0x6: // Load register with immediate value
         chip8->V[X] = NN;
         break;
-    case 0x07:
+    case 0x7: // Add immediate value to register
         chip8->V[X] += NN;
         break;
-    case 0x0A:
+    case 0x8:
+        switch (N)
+        {
+        case 0x0:
+            chip8->V[X] = chip8->V[Y];
+            break;
+        case 0x1:
+            chip8->V[X] |= chip8->V[Y];
+            break;
+        case 0x2:
+            chip8->V[X] &= chip8->V[Y];
+            break;
+        case 0x3:
+            chip8->V[X] ^= chip8->V[Y];
+            break;
+        case 0x4:
+            chip8->V[X] += chip8->V[Y];
+            break;
+        case 0x5:
+            chip8->V[X] -= chip8->V[Y];
+            break;
+        case 0x6:
+            chip8->V[X] = chip8->V[Y] >> 1;
+            break;
+        case 0x7:
+            chip8->V[X] = chip8->V[Y] - chip8->V[X];
+            break;
+        case 0xE:
+            chip8->V[X] = chip8->V[Y] << 1;
+            break;
+        default:
+            fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
+            break;
+        }
+        break;
+    case 0x9: // Skip next opcode
+        if (chip8->V[X] != chip8->V[Y])
+            chip8->PC += 2;
+        break;
+    case 0xA: // I = NNN
         chip8->I = NNN;
         break;
-    case 0x0D:
+    case 0xD: // Draw sprite to screen
     {
         uint8_t x = chip8->V[X] % CHIP8_SCREEN_WIDTH;
         uint8_t y = chip8->V[Y] % CHIP8_SCREEN_HEIGHT;
@@ -89,7 +164,7 @@ void chip8_cycle(Chip8 *chip8)
         {
             if (y + row >= CHIP8_SCREEN_HEIGHT)
                 break;
-            uint8_t sprite_byte = chip8->memory[chip8->I + row];
+            uint8_t sprite_byte = chip8->memory[(chip8->I + row) & CHIP8_ADDR_MASK];
             for (int col = 0; col < CHIP8_SPRITE_WIDTH; col++)
             {
                 if (x + col >= CHIP8_SCREEN_WIDTH)
@@ -106,8 +181,52 @@ void chip8_cycle(Chip8 *chip8)
         }
     }
     break;
+    case 0xF:
+        switch (NN)
+        {
+        case 0x1E:
+            chip8->I += chip8->V[X];
+            break;
+        case 0x33:
+        {
+            uint8_t vX = chip8->V[X];
+            if (chip8->I + 2 >= CHIP8_MEMORY_SIZE)
+            {
+                fprintf(stderr, "Memory overflow at 0x%04x (0x%04x)\n", chip8->PC - 2, opcode);
+                break;
+            }
+            chip8->memory[chip8->I] = vX / 100;
+            chip8->memory[chip8->I + 1] = (vX / 10) % 10;
+            chip8->memory[chip8->I + 2] = vX % 10;
+            break;
+        }
+        case 0x55:
+            if (chip8->I + X >= CHIP8_MEMORY_SIZE)
+            {
+                fprintf(stderr, "Memory overflow at 0x%04x (0x%04x)\n", chip8->PC - 2, opcode);
+                break;
+            }
+            for (int i = 0; i <= X; i++)
+                chip8->memory[chip8->I + i] = chip8->V[i];
+            chip8->I += X + 1;
+            break;
+        case 0x65:
+            if (chip8->I + X >= CHIP8_MEMORY_SIZE)
+            {
+                fprintf(stderr, "Memory overflow at 0x%04x (0x%04x)\n", chip8->PC - 2, opcode);
+                break;
+            }
+            for (int i = 0; i <= X; i++)
+                chip8->V[i] = chip8->memory[chip8->I + i];
+            chip8->I += X + 1;
+            break;
+        default:
+            fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
+            break;
+        }
+        break;
     default:
-        fprintf(stderr, "Unrecognized opcode : 0x%04x\n", opcode);
+        fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
         break;
     }
 }

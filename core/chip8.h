@@ -12,15 +12,16 @@
 #define CHIP8_PROGRAM_START 0x200
 #define CHIP8_MAX_ROM_SIZE (CHIP8_MEMORY_SIZE - CHIP8_PROGRAM_START)
 #define CHIP8_SPRITE_WIDTH 8
+#define CHIP8_ADDR_MASK 0x0FFF
 
 typedef struct
 {
-    uint8_t memory[CHIP8_MEMORY_SIZE];                    // 4 KB RAM, programs start at 0x200
-    uint8_t V[CHIP8_NB_REG];                              // 16 8-bit registers, VF is used as flag
-    uint16_t I;                                           // address register
-    uint16_t PC;                                          // address of the next instruction
-    uint16_t stack[CHIP8_STACK_SIZE];                     // return addresses for subroutines
-    uint8_t SP;                                           // index of the next free stack slot
+    uint8_t memory[CHIP8_MEMORY_SIZE]; // 4 KB RAM, programs start at 0x200
+    uint8_t V[CHIP8_NB_REG];           // 16 8-bit registers, VF is used as flag
+    uint16_t I;                        // address register
+    uint16_t PC;                       // address of the next instruction
+    uint16_t stack[CHIP8_STACK_SIZE];  // return addresses for subroutines
+    uint8_t SP;                        // index of the next free stack slot
     uint8_t delay_timer;
     uint8_t sound_timer;
     bool screen[CHIP8_SCREEN_HEIGHT][CHIP8_SCREEN_WIDTH]; // screen indexed as screen[y][x]

@@ -43,7 +43,14 @@ CHIP-8          Keyboard
 A 0 B F         W X C V
 ```
 
-## Goals
+## Testing
 
-- [ ] Pong
-- [ ] Space Invaders
+The emulator is developed against the [CHIP-8 test suite](https://github.com/Timendus/chip8-test-suite) by Timendus. Its ROMs are used to check that each opcode and behaviour works.
+
+- [x] 1. CHIP-8 logo
+- [x] 2. IBM logo
+- [x] 3. Corax+ opcode test
+- [ ] 4. Flags
+- [ ] 5. Quirks
+- [ ] 6. Keypad
+- [ ] 7. Beep
