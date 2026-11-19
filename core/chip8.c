@@ -129,20 +129,41 @@ void chip8_cycle(Chip8 *chip8)
             chip8->V[X] ^= chip8->V[Y];
             break;
         case 0x4:
-            chip8->V[X] += chip8->V[Y];
+        {
+            uint16_t sum = chip8->V[X] + chip8->V[Y];
+            bool carry = sum > UINT8_MAX;
+            chip8->V[X] = sum;
+            chip8->V[0xF] = carry;
             break;
+        }
         case 0x5:
+        {
+            bool no_borrow = chip8->V[X] >= chip8->V[Y];
             chip8->V[X] -= chip8->V[Y];
+            chip8->V[0xF] = no_borrow;
             break;
+        }
         case 0x6:
+        {
+            bool shifted_out = chip8->V[Y] & 0x01;
             chip8->V[X] = chip8->V[Y] >> 1;
+            chip8->V[0xF] = shifted_out;
             break;
+        }
         case 0x7:
+        {
+            bool no_borrow = chip8->V[Y] >= chip8->V[X];
             chip8->V[X] = chip8->V[Y] - chip8->V[X];
+            chip8->V[0xF] = no_borrow;
             break;
+        }
         case 0xE:
+        {
+            bool shifted_out = (chip8->V[Y] >> 7) & 0x01;
             chip8->V[X] = chip8->V[Y] << 1;
+            chip8->V[0xF] = shifted_out;
             break;
+        }
         default:
             fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
             break;
