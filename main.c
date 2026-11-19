@@ -22,37 +22,19 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    bool running = true;
-
-    SDL_Event event;
     Platform platform = {0};
     if (platform_init(
             &platform,
-            "CHIP-8",
             CHIP8_SCREEN_WIDTH * PLATFORM_PIXEL_SCALE,
             CHIP8_SCREEN_HEIGHT * PLATFORM_PIXEL_SCALE) < 0)
     {
         platform_destroy(&platform);
         return EXIT_FAILURE;
     }
-    while (running)
+    while (platform_process_events(&platform, &chip8))
     {
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-                SDL_Log("Quitting...");
-                running = false;
-                break;
-            default:
-                break;
-            }
-        }
         for (int i = 0; i < CYCLES_PER_FRAME; i++)
-        {
             chip8_cycle(&chip8);
-        }
         platform_render(&platform, &chip8);
         SDL_Delay(16); // 60fps
     }

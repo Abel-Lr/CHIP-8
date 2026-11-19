@@ -19,7 +19,19 @@ static const Theme themes[] = {
 
 static const int nb_themes = sizeof(themes) / sizeof(themes[0]);
 
-int platform_init(Platform *platform, const char *title, int w, int h)
+static void update_window_title(Platform *platform)
+{
+    char new_title[256];
+    snprintf(
+        new_title,
+        sizeof(new_title),
+        "%s - %s",
+        PLATFORM_TITLE,
+        themes[platform->theme_index].name);
+    SDL_SetWindowTitle(platform->window, new_title);
+}
+
+int platform_init(Platform *platform, int w, int h)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -27,7 +39,7 @@ int platform_init(Platform *platform, const char *title, int w, int h)
         return -1;
     }
     platform->window = SDL_CreateWindow(
-        title,
+        PLATFORM_TITLE,
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         w,
@@ -46,6 +58,9 @@ int platform_init(Platform *platform, const char *title, int w, int h)
         return -1;
     }
     platform->theme_index = 0;
+    platform->escape_held = false;
+    platform->escape_press_time = 0;
+    update_window_title(platform);
     return 0;
 }
 
@@ -97,4 +112,76 @@ void platform_render(Platform *platform, const Chip8 *chip8)
 void platform_next_theme(Platform *platform)
 {
     platform->theme_index = (platform->theme_index + 1) % nb_themes;
+    update_window_title(platform);
+}
+
+void platform_previous_theme(Platform *platform)
+{
+    platform->theme_index = ((platform->theme_index - 1) % nb_themes + nb_themes) % nb_themes;
+    update_window_title(platform);
+}
+
+static void show_quit_progress(Uint32 elapsed_time_held)
+{
+    const Uint32 dot_interval = PLATFORM_HOLD_QUIT_DURATION_MS / PLATFORM_QUIT_MAX_DOTS;
+    int nb_points = elapsed_time_held / dot_interval + 1;
+    if (nb_points > PLATFORM_QUIT_MAX_DOTS)
+        nb_points = PLATFORM_QUIT_MAX_DOTS;
+    printf("\rQuitting%.*s\033[K", nb_points, "...");
+    fflush(stdout);
+}
+
+bool platform_process_events(Platform *platform, Chip8 *chip8)
+{
+    SDL_Event event;
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+        case SDL_QUIT:
+            SDL_Log("Quitting...");
+            return false;
+        case SDL_KEYDOWN:
+            if (event.key.repeat != 0)
+                break;
+            else
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_y:
+                    platform_next_theme(platform);
+                    break;
+                case SDLK_t:
+                    platform_previous_theme(platform);
+                    break;
+                case SDLK_ESCAPE:
+                    platform->escape_held = true;
+                    platform->escape_press_time = SDL_GetTicks();
+                    break;
+                default:
+                    break;
+                }
+            break;
+        case SDL_KEYUP:
+            if (event.key.keysym.sym == SDLK_ESCAPE)
+            {
+                platform->escape_held = false;
+                printf("\r\033[K");
+                fflush(stdout);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    if (platform->escape_held)
+    {
+        Uint32 elapsed_time = SDL_GetTicks() - platform->escape_press_time;
+        show_quit_progress(elapsed_time);
+        if (elapsed_time >= PLATFORM_HOLD_QUIT_DURATION_MS)
+        {
+            printf("\n");
+            return false;
+        }
+    }
+    return true;
 }
