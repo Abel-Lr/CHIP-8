@@ -5,7 +5,7 @@
 #include "platform.h"
 #include "chip8.h"
 
-#define CYCLES_PER_FRAME 11
+#define CYCLES_PER_FRAME 50
 
 int main(int argc, char **argv)
 {
@@ -37,6 +37,7 @@ int main(int argc, char **argv)
             chip8_cycle(&chip8);
         platform_render(&platform, &chip8);
         SDL_Delay(16); // 60fps
+        chip8_update_timers(&chip8);
     }
     platform_destroy(&platform);
     return EXIT_SUCCESS;

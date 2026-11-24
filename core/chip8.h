@@ -26,11 +26,13 @@ typedef struct
     uint8_t sound_timer;
     bool screen[CHIP8_SCREEN_HEIGHT][CHIP8_SCREEN_WIDTH]; // screen indexed as screen[y][x]
     bool keyboard[CHIP8_NB_KEYPAD];                       // 16 keys, true if pressed
+    int fx0a_key;                                         // Key pressed during FX0A, -1 if none
 } Chip8;
 
 void chip8_init(Chip8 *chip8);
 int chip8_load_rom(Chip8 *chip8, const char *rom_path);
 uint16_t chip8_fetch(Chip8 *chip8);
 void chip8_cycle(Chip8 *chip8);
+void chip8_update_timers(Chip8 *chip8);
 
 #endif

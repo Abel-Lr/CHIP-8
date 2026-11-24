@@ -43,6 +43,14 @@ CHIP-8          Keyboard
 A 0 B F         W X C V
 ```
 
+Emulator shortcuts:
+
+| Key            | Action                  |
+| -------------- | ----------------------- |
+| `T`            | Previous display theme  |
+| `Y`            | Next display theme      |
+| `Escape` (hold)| Quit the emulator       |
+
 ## Testing
 
 The emulator is developed against the [CHIP-8 test suite](https://github.com/Timendus/chip8-test-suite) by Timendus. Its ROMs are used to check that each opcode and behaviour works.
@@ -52,5 +60,5 @@ The emulator is developed against the [CHIP-8 test suite](https://github.com/Tim
 - [x] 3. Corax+ opcode test
 - [x] 4. Flags
 - [ ] 5. Quirks
-- [~] 6. Keypad
+- [x] 6. Keypad
 - [ ] 7. Beep

@@ -6,6 +6,7 @@ void chip8_init(Chip8 *chip8)
 {
     memset(chip8, 0, sizeof(*chip8));
     chip8->PC = CHIP8_PROGRAM_START;
+    chip8->fx0a_key = -1;
 }
 
 int chip8_load_rom(Chip8 *chip8, const char *rom_path)
@@ -200,11 +201,62 @@ void chip8_cycle(Chip8 *chip8)
                 }
             }
         }
+        break;
     }
-    break;
+    case 0xE:
+        switch (NN)
+        {
+        case 0x9E:
+            if (chip8->keyboard[chip8->V[X] & 0xF])
+                chip8->PC += 2;
+            break;
+        case 0xA1:
+            if (!chip8->keyboard[chip8->V[X] & 0xF])
+                chip8->PC += 2;
+            break;
+        default:
+            fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
+            break;
+        }
+        break;
     case 0xF:
         switch (NN)
         {
+        case 0x07:
+            chip8->V[X] = chip8->delay_timer;
+            break;
+        case 0x0A:
+        {
+            if (chip8->fx0a_key < 0)
+            {
+                for (int i = 0; i < CHIP8_NB_KEYPAD; i++)
+                {
+                    if (chip8->keyboard[i])
+                    {
+                        chip8->fx0a_key = i;
+                        break;
+                    }
+                }
+                chip8->PC -= 2;
+            }
+            else
+            {
+                if (chip8->keyboard[chip8->fx0a_key])
+                    chip8->PC -= 2;
+                else
+                {
+                    chip8->V[X] = chip8->fx0a_key;
+                    chip8->fx0a_key = -1;
+                }
+            }
+            break;
+        }
+        case 0x15:
+            chip8->delay_timer = chip8->V[X];
+            break;
+        case 0x18:
+            chip8->sound_timer = chip8->V[X];
+            break;
         case 0x1E:
             chip8->I += chip8->V[X];
             break;
@@ -250,4 +302,12 @@ void chip8_cycle(Chip8 *chip8)
         fprintf(stderr, "Unrecognized opcode : 0x%04x at 0x%04x\n", opcode, chip8->PC - 2);
         break;
     }
+}
+
+void chip8_update_timers(Chip8 *chip8)
+{
+    if (chip8->delay_timer != 0)
+        chip8->delay_timer--;
+    if (chip8->sound_timer != 0)
+        chip8->sound_timer--;
 }

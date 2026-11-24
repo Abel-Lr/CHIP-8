@@ -185,29 +185,31 @@ bool platform_process_events(Platform *platform, Chip8 *chip8)
             }
             break;
         case SDL_KEYDOWN:
-            if (event.key.repeat != 0)
-                break;
-            else
-                switch (event.key.keysym.sym)
-                {
-                case SDLK_y:
+            switch (event.key.keysym.sym)
+            {
+            case SDLK_y:
+                if (event.key.repeat == 0)
                     platform_next_theme(platform);
-                    break;
-                case SDLK_t:
+                break;
+            case SDLK_t:
+                if (event.key.repeat == 0)
                     platform_previous_theme(platform);
-                    break;
-                case SDLK_ESCAPE:
+                break;
+            case SDLK_ESCAPE:
+                if (!platform->escape_held)
+                {
                     platform->escape_held = true;
                     platform->escape_press_time = SDL_GetTicks();
-                    break;
-                default:
-                {
-                    const int key = get_chip8_key(event.key.keysym.scancode);
-                    if (key >= 0)
-                        chip8->keyboard[key] = true;
-                    break;
                 }
-                }
+                break;
+            default:
+            {
+                const int key = get_chip8_key(event.key.keysym.scancode);
+                if (key >= 0)
+                    chip8->keyboard[key] = true;
+                break;
+            }
+            }
             break;
         case SDL_KEYUP:
             if (event.key.keysym.sym == SDLK_ESCAPE)
