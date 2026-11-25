@@ -84,6 +84,8 @@ void chip8_cycle(Chip8 *chip8)
     uint8_t NN = opcode & 0x00FF;
     uint16_t NNN = opcode & CHIP8_ADDR_MASK;
 
+    chip8->draw_flag = false;
+
     switch (type)
     {
     case 0x0:
@@ -145,12 +147,15 @@ void chip8_cycle(Chip8 *chip8)
             break;
         case 0x1:
             chip8->V[X] |= chip8->V[Y];
+            chip8->V[0xF] = 0;
             break;
         case 0x2:
             chip8->V[X] &= chip8->V[Y];
+            chip8->V[0xF] = 0;
             break;
         case 0x3:
             chip8->V[X] ^= chip8->V[Y];
+            chip8->V[0xF] = 0;
             break;
         case 0x4:
         {
@@ -211,6 +216,7 @@ void chip8_cycle(Chip8 *chip8)
         uint8_t x = chip8->V[X] % CHIP8_SCREEN_WIDTH;
         uint8_t y = chip8->V[Y] % CHIP8_SCREEN_HEIGHT;
         chip8->V[0x0F] = 0;
+        chip8->draw_flag = true;
         for (int row = 0; row < N; row++)
         {
             if (y + row >= CHIP8_SCREEN_HEIGHT)

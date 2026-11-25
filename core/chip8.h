@@ -29,6 +29,7 @@ typedef struct
     bool screen[CHIP8_SCREEN_HEIGHT][CHIP8_SCREEN_WIDTH]; // screen indexed as screen[y][x]
     bool keyboard[CHIP8_NB_KEYPAD];                       // 16 keys, true if pressed
     int fx0a_key;                                         // Key pressed during FX0A, -1 if none
+    bool draw_flag;                    // True if last instruction was DXYN 
 } Chip8;
 
 void chip8_init(Chip8 *chip8);

@@ -34,7 +34,11 @@ int main(int argc, char **argv)
     while (platform_process_events(&platform, &chip8))
     {
         for (int i = 0; i < CYCLES_PER_FRAME; i++)
+        {
             chip8_cycle(&chip8);
+            if (chip8.draw_flag)
+                break;
+        }
         platform_render(&platform, &chip8);
         SDL_Delay(16); // 60fps
         chip8_update_timers(&chip8);
