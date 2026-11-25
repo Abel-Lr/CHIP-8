@@ -1,12 +1,35 @@
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "chip8.h"
+
+static const uint8_t font[] = {
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+};
 
 void chip8_init(Chip8 *chip8)
 {
     memset(chip8, 0, sizeof(*chip8));
     chip8->PC = CHIP8_PROGRAM_START;
     chip8->fx0a_key = -1;
+    srand(time(NULL));
+    memcpy(&chip8->memory[CHIP8_FONT_START], font, sizeof(font));
 }
 
 int chip8_load_rom(Chip8 *chip8, const char *rom_path)
@@ -177,6 +200,12 @@ void chip8_cycle(Chip8 *chip8)
     case 0xA: // I = NNN
         chip8->I = NNN;
         break;
+    case 0xB: // jump to NNN + V[0]
+        chip8->PC = (NNN + chip8->V[0]) & CHIP8_ADDR_MASK;
+        break;
+    case 0xC: // store random & NN to V[X]
+        chip8->V[X] = rand() & NN;
+        break;
     case 0xD: // Draw sprite to screen
     {
         uint8_t x = chip8->V[X] % CHIP8_SCREEN_WIDTH;
@@ -259,6 +288,9 @@ void chip8_cycle(Chip8 *chip8)
             break;
         case 0x1E:
             chip8->I += chip8->V[X];
+            break;
+        case 0x29:
+            chip8->I = CHIP8_FONT_START + ((chip8->V[X] & 0xF) * CHIP8_CHAR_SIZE);
             break;
         case 0x33:
         {
