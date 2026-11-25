@@ -41,6 +41,7 @@ int main(int argc, char **argv)
         }
         platform_render(&platform, &chip8);
         SDL_Delay(16); // 60fps
+        platform_update_audio(&platform, &chip8);
         chip8_update_timers(&chip8);
     }
     platform_destroy(&platform);

@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "chip8.h"
 #include <stdbool.h>
+#include "audio.h"
 
 #define PLATFORM_PIXEL_SCALE 10
 #define PLATFORM_TITLE "CHIP-8"
@@ -16,11 +17,14 @@ typedef struct
     int theme_index;
     bool escape_held;
     Uint32 escape_press_time;
+    Audio audio;
 } Platform;
 
 int platform_init(Platform *platform, int w, int h);
 
 void platform_destroy(Platform *platform);
+
+void platform_update_audio(Platform *platform, const Chip8 *chip8);
 
 void platform_render(Platform *platform, const Chip8 *chip8);
 

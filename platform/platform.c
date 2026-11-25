@@ -90,6 +90,7 @@ int platform_init(Platform *platform, int w, int h)
     platform->escape_held = false;
     platform->escape_press_time = 0;
     update_window_title(platform);
+    audio_init(&platform->audio);
     return 0;
 }
 
@@ -105,7 +106,13 @@ void platform_destroy(Platform *platform)
         SDL_DestroyWindow(platform->window);
         platform->window = NULL;
     }
+    audio_destroy(&platform->audio);
     SDL_Quit();
+}
+
+void platform_update_audio(Platform *platform, const Chip8 *chip8)
+{
+    audio_update(&platform->audio, chip8->sound_timer > 0);
 }
 
 void platform_render(Platform *platform, const Chip8 *chip8)
