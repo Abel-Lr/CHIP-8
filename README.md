@@ -61,4 +61,4 @@ The emulator is developed against the [CHIP-8 test suite](https://github.com/Tim
 - [x] 4. Flags
 - [x] 5. Quirks
 - [x] 6. Keypad
-- [ ] 7. Beep
+- [x] 7. Beep
